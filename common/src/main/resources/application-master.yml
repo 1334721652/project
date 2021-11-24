@@ -1,0 +1,80 @@
+server:
+  port: 43145  # 默认端口
+  tomcat:
+    uri-encoding: UTF-8 # 默认编码
+eureka:
+  instance:
+    instanceId: ${eureka.instance.ipAddress}:${spring.application.name}:${server.port} #实例名组成
+    preferIpAddress: true # 优先ip注册
+    ipAddress: 172.20.10.7  #强制指定IP地址，默认会获取本机的IP地址
+  client:
+    service-url:
+      defaultZone: http://127.0.0.1:13145/eureka # 注册中心地址
+spring:
+  application:
+    name: common # 项目名称
+  datasource:
+    dynamic: # druid连接池配置
+      primary: master #默认数据源
+      datasource:
+        master: #主库配置
+          username: TESTDB  #TESTDB
+          password: TESTDB  #TESTDB
+          driver-class-name: ${datasource_driver_class_name:com.mysql.cj.jdbc.Driver}
+          url: ${datasource_url:jdbc:mysql://127.0.0.1:3306/TESTDB?characterEncoding=utf8&useSSL=false&allowPublicKeyRetrieval=true&serverTimezone=UTC}
+        druid:
+          initial-size: 5 #启动程序时，在连接池中初始化多少个连接
+          max-active: 20 #连接池中最多支持多少个活动会话
+          min-idle: 5 #回收空闲连接时，将保证至少有minIdle个连接
+          max-wait: 60000 #程序向连接池中请求连接时,超过maxWait的值后，认为本次请求失败，即连接池
+          filters: stat,wall,slf4j
+        slave: #从库配置
+          username: TESTDB  #TESTDB
+          password: TESTDB  #TESTDB
+          driver-class-name: ${datasource_driver_class_name:com.mysql.cj.jdbc.Driver}
+          url: ${datasource_url:jdbc:mysql://127.0.0.1:3306/TESTDB?characterEncoding=utf8&useSSL=false&allowPublicKeyRetrieval=true&serverTimezone=UTC}
+          druid:
+            initial-size: 5 #启动程序时，在连接池中初始化多少个连接
+            max-active: 20 #连接池中最多支持多少个活动会话
+            min-idle: 5 #回收空闲连接时，将保证至少有minIdle个连接
+            max-wait: 60000 #程序向连接池中请求连接时,超过maxWait的值后，认为本次请求失败，即连接池
+            filters: stat,wall,slf4j
+feign:
+  hystrix:
+    enabled: true # 开启使用熔断器
+  httpclient:
+    enabled: true
+  client:
+    config:
+      default:
+        connectTimeout: 10000 # 10s就超时
+        readTimeout: 10000 # 10s就超时
+ribbon:
+  ReadTimeout: 2000   #请求处理的超时时间，单位为毫秒
+  ConnectTimeout: 1000  #请求连接的超时时间，单位为毫秒
+  MaxAutoRetries: 2  #对当前实例的重试次数
+  MaxAutoRetriesNextServer: 1  #切换实例的重试次数，默认为1次
+hystrix:
+  command:
+    default:
+      execution:
+        isolation:
+          thread:
+            timeoutInMilliseconds: 10000 #设置超时限制时间，单位为毫秒
+#actuator端口
+management:
+  server:
+    port: 49001
+  #修改访问路径  2.0之前默认是/   2.0默认是 /actuator  可以通过这个属性值修改
+  endpoints:
+    web:
+      base-path: /actuator
+      #开放所有页面节点  默认只开启了health、info两个节点
+      exposure:
+        include: '*'
+  #显示健康具体信息  默认不会显示详细信息
+  endpoint:
+    health:
+      show-details: always
+    shutdown:
+      enabled: true  #启用shutdown端点，以便支持优雅停机

@@ -1,0 +1,40 @@
+server:
+  port: 53145  # 默认端口
+  tomcat:
+    uri-encoding: UTF-8 # 默认编码
+spring:
+  application:
+    name: gateway # 项目名称
+  cloud:
+    gateway:
+      httpclient: #配置全局超时
+        connect-timeout: 5000 # 必须以毫秒为单位指定
+        response-timeout: 5s
+      default-filters:
+        - AddRequestHeader=gateway-env, springcloud-gateway
+      discovery:
+        locator:
+          enabled: true # 开启 Gateway 服务注册中心服务发现
+      routes: # 将约 80% 的流量转发到server_high，将约 20% 的流量转发到server_low
+        - id: server_high
+          uri: lb://common
+          predicates:
+            - Weight=group1, 8
+            - Path=/api/**
+#        - id: server_low
+#          uri: lb://oldCommonDemo
+#          predicates:
+#            - Weight=group1, 2
+#            - Path=/api/**
+eureka:
+  instance:
+    instanceId: ${eureka.instance.ipAddress}:${spring.application.name}:${server.port} #实例名组成
+    preferIpAddress: true # 优先ip注册
+    ipAddress: 172.20.10.7  #强制指定IP地址，默认会获取本机的IP地址
+  client:
+    service-url:
+      defaultZone: http://127.0.0.1:13145/eureka # 注册中心地址
+logging:
+  level:
+    org.springframework.cloud.gateway: DEBUG
+    reactor.netty.http.client: DEBUG

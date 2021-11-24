@@ -1,0 +1,46 @@
+server:
+  port: 33145  # 默认端口
+  tomcat:
+    uri-encoding: UTF-8 # 默认编码
+spring:
+  application:
+    name: zuul # 项目名称
+eureka:
+  instance:
+    instanceId: ${eureka.instance.ipAddress}:${spring.application.name}:${server.port} #实例名组成
+    preferIpAddress: true # 优先ip注册
+    ipAddress: 172.20.10.7  #强制指定IP地址，默认会获取本机的IP地址
+  client:
+    service-url:
+      defaultZone: http://127.0.0.1:13145/eureka # 注册中心地址
+#zuul 动态路由代理配置  zuul.routes.服务名.path,服务名要与注册的一致
+#应用名映射
+zuul:
+  addHostHeader: true # 防止重定向问题、使得网关在路由转发前为请求设置Host头信息，以标识最初的服务端请求地址
+  retryable: false #全局关闭重试机制
+  routes:
+    api-a:
+#      path: /api-a/**
+#      serviceId: yzydemo
+#    api-b:
+      path: /api-b/**
+      serviceId: common
+      # 解决cookie和头信息在zuul请求后过滤一些敏感信息的解决方案
+      customSensitiveHeaders: true
+  ratelimit: # 限流配置 一分钟内只能访问3次
+    enabled: true
+    policies:
+      api-b:
+        limit: 3
+        refresh-interval: 60
+        type: origin  # 限流方式
+  SendErrorFilter:
+    error:
+      disable: true # 停止默认异常处理器SendErrorFilter
+hystrix: # 设置网关超时时间
+  command:
+    default:
+      execution:
+        isolation:
+          thread:
+            timeoutInMilliseconds: 10000 #设置超时限制时间，单位为毫秒
